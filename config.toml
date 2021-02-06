@@ -1,0 +1,45 @@
+[convert-params]
+# Разделитель для файла csv в который будет записан результат
+delimiter = ";"
+
+# wix images cdn
+wix_url = "https://static.wixstatic.com/media/"
+
+# Адрес магазина
+url = ""
+
+# true - будет проставлена доставка "Есть"
+# false - "Нет"
+delivery = true
+
+# Стоимость доставки, если установлено -1, то поле будет пустым
+# Примеры:
+#   500
+#   0
+#   -1
+delivery_cost = 500
+
+# Cрок доставки в днях
+# Примеры:
+#   "3"
+#   "2-4"
+#   ""
+#   "0"
+delivery_time = ""
+
+# true - самовывоз "Нет"
+# false - самовывоз "Есть" "Нет"
+delivery_only = true
+
+# Купить в магазине без заказа
+# true - Нельзя
+# false - Можно
+need_order = true
+
+# Валюта
+currency = "RUR"
+
+# Гарантия
+# true - Есть
+# false - Нет
+warranty = true

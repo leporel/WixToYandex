@@ -28,7 +28,7 @@ func ConvertFile(inFile string) error {
 }
 
 func convertFile(inFile string) error {
-	fmt.Println("Парсин файла", inFile)
+	fmt.Println("Парсинг файла", inFile)
 
 	wixFile, err := os.Open(inFile)
 	if err != nil {
@@ -184,7 +184,7 @@ func convert(wixFile io.Reader, yandexFile io.Writer) error {
 		newRow := makeRow(product)
 
 		if v, ok := existingUrl[newRow[yandexColNumber["Ссылка на товар на сайте магазина"]]]; ok {
-			fmt.Printf("	[WARNING] Найдено совпадение ссылок на продукт, требуется коррекция вручную: %s\n", v)
+			fmt.Printf("	[WARNING] дубль ссылок на продукт, нужно править вручную: %s\n", v)
 		}
 		existingUrl[newRow[yandexColNumber["Ссылка на товар на сайте магазина"]]] = newRow[yandexColNumber["Ссылка на товар на сайте магазина"]]
 

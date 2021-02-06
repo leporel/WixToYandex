@@ -7,6 +7,8 @@
 
 ## Использование
 
+[Скачать последнюю версию](https://github.com/leporel/WixToYandex/releases/latest)
+
 Посмотрите файл config.toml и настройте под себя.  
 Запустите программу в консоле с параметром --help
 

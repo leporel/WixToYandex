@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	config2 "github.com/leporel/wixtoyandex/config"
-	"github.com/leporel/wixtoyandex/convector"
+	"github.com/leporel/wixtoyandex/converter"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -48,12 +48,12 @@ func Execute() {
 	config2.InitConfig(configFile)
 
 	if inFile != "" {
-		if err := convector.ConvertFile(inFile); err != nil {
+		if err := converter.ConvertFile(inFile); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 	} else {
-		if err := convector.ConvertFiles(inFolder); err != nil {
+		if err := converter.ConvertFiles(inFolder); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}

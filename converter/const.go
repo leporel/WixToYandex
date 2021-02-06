@@ -1,4 +1,4 @@
-package convector
+package converter
 
 var wixProductFields = make(map[int]string)
 

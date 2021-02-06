@@ -1,4 +1,4 @@
-package convector
+package converter
 
 import (
 	"encoding/csv"

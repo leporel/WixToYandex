@@ -49,6 +49,9 @@ func convertFile(inFile string) error {
 
 	fmt.Println("Новый файл", outFile)
 	yandexFile, err := os.Create(outFile)
+	if err != nil {
+		return fmt.Errorf("ошибка при создании файла \"%s\": %s", outFile, err)
+	}
 	defer yandexFile.Close()
 
 	bomUtf8 := []byte{0xEF, 0xBB, 0xBF}

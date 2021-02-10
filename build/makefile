@@ -1,3 +1,5 @@
+version = $(shell  cat ./../VERSION)
+
 release:
-	export BUILD_VERSION=$(cat ./../VERSION)
+	export BUILD_VERSION=$(version)
 	cd .. && goreleaser --skip-publish --rm-dist

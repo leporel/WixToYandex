@@ -33,7 +33,7 @@ jobs:
       - name: Get version
         id: get_version
         run: |
-          echo "BUILD_VERSION=$(cat VERSION)"
+          echo "BUILD_VERSION=$(cat VERSION)" >> $GITHUB_ENV
 #         echo "::set-output name=version::$(cat VERSION)"
       -
         name: Publish to github

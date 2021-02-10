@@ -32,7 +32,7 @@ func convertFile(inFile string) error {
 
 	wixFile, err := os.Open(inFile)
 	if err != nil {
-		return fmt.Errorf("ошибка при открытии файла \"%s\": %s", inFile, err)
+		return fmt.Errorf("ошибка при открытии файла %s: %s", inFile, err)
 	}
 	defer wixFile.Close()
 
@@ -50,7 +50,7 @@ func convertFile(inFile string) error {
 	fmt.Println("Новый файл", outFile)
 	yandexFile, err := os.Create(outFile)
 	if err != nil {
-		return fmt.Errorf("ошибка при создании файла \"%s\": %s", outFile, err)
+		return fmt.Errorf("ошибка при создании файла %s: %s", outFile, err)
 	}
 	defer yandexFile.Close()
 

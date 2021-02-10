@@ -32,10 +32,13 @@ jobs:
           install-only: true
       - name: Get version
         id: get_version
-        run: echo "::set-output name=version::$(cat VERSION)"
+        run: |
+          echo "BUILD_VERSION=$(cat VERSION)"
+#         echo "::set-output name=version::$(cat VERSION)"
       -
         name: Publish to github
         run: goreleaser release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BUILD_VERSION: ${{ steps.goreleaser.outputs.version}}
+#          BUILD_VERSION: ${{ steps.get_version.outputs.version}}
+          BUILD_VERSION: ${{ env.BUILD_VERSION }}

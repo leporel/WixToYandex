@@ -1,0 +1,41 @@
+# This is an example .goreleaser.yml file with some sane defaults.
+# Make sure to check the documentation at http://goreleaser.com
+project_name: WixToYandex
+before:
+  hooks:
+    # You may remove this if you don't use go modules.
+    - go mod download
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+    ldflags:
+      - -X github.com/leporel/wixtoyandex/cmd.version={{.Env.BUILD_VERSION}}
+    binary: wty
+archives:
+  - format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+    replacements:
+        darwin: MacOS
+        linux: Linux
+        windows: Windows
+        amd64: 64-bit
+    files:
+      - wix
+      - config.toml
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{.Os}}-{{ .Arch }}"
+checksum:
+  name_template: 'checksums.txt'
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'

@@ -2,6 +2,11 @@
 /wty.exe
 /wty
 /.idea/
-/Release/
 /wixtoyandex.exe
 /wixtoyandex
+/build/build
+/build/wix/
+/dist/
+/dist/CHANGELOG.md
+/dist/config.yaml
+

@@ -1,12 +1,13 @@
 name: goreleaser
 
 on:
-  push:
-    branches:
-      - 'master'
-    tags:
-      - '*'
-  pull_request:
+  workflow_dispatch:
+#  push:
+#    branches:
+#      - 'master'
+#    tags:
+#      - '*'
+#  pull_request:
 
 jobs:
   goreleaser:
@@ -24,15 +25,17 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.15.2
+      -
+        name: Install GoReleaser
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          install-only: true
       - name: Get version
         id: get_version
         run: echo "::set-output name=version::$(cat VERSION)"
       -
-        name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
-        with:
-          version: latest
-          args: release --rm-dist
+        name: Publish
+        run: goreleaser release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BUILD_VERSION: ${{ steps.goreleaser.outputs.version}}

@@ -2,6 +2,8 @@ package converter
 
 var wixProductFields = make(map[int]string)
 
+const skuFilter = "abcdefghijklmnopqrstuvwxyz0123456789"
+
 /*
 Wix fields 06.02.2021
 

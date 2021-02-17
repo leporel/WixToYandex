@@ -7,14 +7,20 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	"html"
 	"io"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"pkg.re/essentialkaos/translit.v2"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 	"unicode"
 	"unicode/utf8"
 )
+
+var checkUrlLock = make(chan interface{}, 10)
 
 func ConvertFile(inFile string) error {
 	params := config.Cfg.ConvertParams
@@ -59,7 +65,13 @@ func convertFile(inFile string) error {
 		return fmt.Errorf("ошибка при записи в файл кодировки: %s", err)
 	}
 
-	return convert(wixFile, yandexFile)
+	err = convert(wixFile, yandexFile)
+	if err != nil {
+		return err
+	}
+	fmt.Println("ГОТОВО!")
+
+	return nil
 }
 
 func ConvertFiles(inFolder string) error {
@@ -95,6 +107,8 @@ func ConvertFiles(inFolder string) error {
 		return fmt.Errorf("ошибка при переборе файлов: %s", err)
 	}
 
+	fmt.Println("ГОТОВО!")
+
 	return nil
 }
 
@@ -119,7 +133,7 @@ func processDefaultRow(params config.ConvertParams) {
 
 	defaultYandexRow[yandexColNumber["Валюта"]] = params.Currency
 
-	defaultYandexRow[yandexColNumber["Ссылка на товар на сайте магазина"]] = params.Url
+	defaultYandexRow[yandexColNumber["Ссылка на товар на сайте магазина"]] = strings.TrimSuffix(params.Url, "/")
 
 	defaultYandexRow[yandexColNumber["Ссылка на картинку"]] = params.WixUrl
 
@@ -152,12 +166,16 @@ func convert(wixFile io.Reader, yandexFile io.Writer) error {
 	var existingUrl = make(map[string]string)
 
 	line := 0
+
+	var wg sync.WaitGroup
+
 	for {
 		line++
 
 		record, err := reader.Read()
 		if err != nil {
 			if err == io.EOF {
+				wg.Wait()
 				return nil
 			}
 			return fmt.Errorf("ошибка при парсинге файла: %s", err)
@@ -165,7 +183,7 @@ func convert(wixFile io.Reader, yandexFile io.Writer) error {
 
 		if line == 1 { // first line
 			for i, s := range record {
-				wixProductFields[i] = strings.TrimSpace(filterCharacters(s))
+				wixProductFields[i] = strings.TrimSpace(filterCharacters(s, true, unicode.Cyrillic))
 			}
 			continue
 		}
@@ -177,7 +195,7 @@ func convert(wixFile io.Reader, yandexFile io.Writer) error {
 			if !ok {
 				return fmt.Errorf("fuck this stupid wix format file: %v, %v \n", i, s)
 			}
-			product[nameField] = filterHtml(filterCharacters(s))
+			product[nameField] = filterHtml(filterCharacters(s, true, unicode.Cyrillic))
 		}
 
 		if product["visible"] != "true" {
@@ -186,12 +204,31 @@ func convert(wixFile io.Reader, yandexFile io.Writer) error {
 
 		newRow := makeRow(product)
 
-		if v, ok := existingUrl[newRow[yandexColNumber["Ссылка на товар на сайте магазина"]]]; ok {
-			fmt.Printf("	[WARNING] дубль ссылок на продукт, нужно править вручную: %s\n", v)
-		}
-		existingUrl[newRow[yandexColNumber["Ссылка на товар на сайте магазина"]]] = newRow[yandexColNumber["Ссылка на товар на сайте магазина"]]
+		productUrl := newRow[yandexColNumber["Ссылка на товар на сайте магазина"]]
+		sku := newRow[yandexColNumber["id"]]
 
-		if err := write(newRow); err != nil {
+		if v, ok := existingUrl[productUrl]; ok {
+			fmt.Printf("	[WARNING] дубль ссылок [SKU:%s и %s]: %s\n", sku, v, productUrl)
+		} else if params.Url != "" {
+			wg.Add(1)
+
+			go func() {
+				defer wg.Done()
+				ok, err = checkUrl(productUrl)
+				if err != nil {
+					fmt.Printf("[ERROR] не удалось проверить ссылку %s\n", productUrl)
+					return
+				}
+				if !ok {
+					fmt.Printf("[WARNING] нерабочая ссылка [SKU:%s]: %s\n", sku, productUrl)
+				}
+
+			}()
+		}
+
+		existingUrl[newRow[yandexColNumber["Ссылка на товар на сайте магазина"]]] = sku
+
+		if err = write(newRow); err != nil {
 			return err
 		}
 	}
@@ -201,7 +238,7 @@ func makeRow(product map[string]string) []string {
 	rs := make([]string, len(defaultYandexRow))
 	copy(rs, defaultYandexRow)
 
-	rs[yandexColNumber["id"]] = translit.EncodeToISO9B(product["sku"])
+	rs[yandexColNumber["id"]] = filterSKU(translit.EncodeToISO9B(product["sku"]))
 	if inventory, err := strconv.Atoi(product["inventory"]); err == nil && inventory == 0 {
 		rs[yandexColNumber["Статус товара"]] = "На заказ"
 	}
@@ -250,12 +287,22 @@ func makeRow(product map[string]string) []string {
 	return rs
 }
 
-func filterCharacters(s string) string {
+func filterSKU(s string) string {
+	r := ""
+	for _, char := range s {
+		if strings.Contains(skuFilter, strings.ToLower(string(char))) {
+			r = r + string(char)
+		}
+	}
+	return r
+}
+
+func filterCharacters(s string, ASCIIFilter bool, ranges ...*unicode.RangeTable) string {
 	var rs = make([]byte, 0, len([]byte(s)))
 	for _, runeValue := range s {
-		if runeValue < unicode.MaxASCII {
+		if ASCIIFilter && runeValue < unicode.MaxASCII {
 			rs = append(rs, byte(runeValue))
-		} else if unicode.In(runeValue, unicode.Cyrillic) {
+		} else if unicode.In(runeValue, ranges...) {
 			r := fmt.Sprintf("%c", runeValue)
 			rs = append(rs, []byte(r)...)
 		}
@@ -273,4 +320,28 @@ func filterHtml(s string) string {
 	rs = strings.Replace(rs, "<br>", "\n", -1)
 
 	return rs
+}
+
+func checkUrl(url string) (bool, error) {
+	checkUrlLock <- struct{}{}
+	defer func() { <-checkUrlLock }()
+
+	cli := http.Client{Timeout: 5 * time.Second}
+
+	resp, err := cli.Get(url)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	if strings.Contains(string(body), "Нет такого товара") {
+		return false, nil
+	}
+
+	return true, nil
 }

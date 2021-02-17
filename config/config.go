@@ -9,6 +9,7 @@ import (
 type ConvertParams struct {
 	Delimiter    string `mapstructure:"delimiter"`
 	Url          string `mapstructure:"url"`
+	CheckUrl     bool   `mapstructure:"check_url"`
 	Delivery     bool   `mapstructure:"delivery"`
 	DeliveryTime string `mapstructure:"delivery_time"`
 	DeliveryCost int    `mapstructure:"delivery_cost"`
@@ -27,6 +28,7 @@ var Cfg = Config{
 	ConvertParams: ConvertParams{
 		Delimiter:    ";",
 		Url:          "https://магазин",
+		CheckUrl:     true,
 		WixUrl:       "https://static.wixstatic.com/media/",
 		Delivery:     false,
 		DeliveryTime: "",

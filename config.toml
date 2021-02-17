@@ -6,8 +6,13 @@ delimiter = ";"
 wix_url = "https://static.wixstatic.com/media/"
 
 # Адрес магазина
-# https://www.my-store.ru
+# Пример: https://www.my-store.ru
 url = ""
+
+# Проверять ссылки на товар
+# false - не проверять ссылки
+# true - проверять (может быть медленно)
+check_url = true
 
 # true - будет проставлена доставка "Есть"
 # false - "Нет"
@@ -28,12 +33,13 @@ delivery_cost = 500
 #   "0"
 delivery_time = ""
 
+# Только доставка
 # true - самовывоз "Нет"
 # false - самовывоз "Есть"
 delivery_only = true
 
-# Купить в магазине без заказа
-# true - Нельзя
+# Обязательность заказа
+# true - Нельзя купить без заказа
 # false - Можно
 need_order = true
 
